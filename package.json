@@ -1,0 +1,31 @@
+{
+    "name": "ki1r0y.fs-store",
+    "version": "1.0.0",
+    "description": "A very simple file-based document store, including json docs and integration with express/connect.",
+    "keywords": ["fs", "store", "document store", "json", "expressjs", "connect", "middleware"],
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/howard-stearns/ki1r0y.fs-store.git"
+    },
+    "author": "Howard Stearns",
+    "license": "Creative Commons 1.0 Universal",
+    "bugs": {
+        "url": "https://github.com/howard-stearns/ki1r0y.fs-store/issues"
+    },
+    "homepage": "https://github.com/howard-stearns/ki1r0y.fs-store",
+    "files": [
+        "index.js", "test/test.js"
+    ],
+    "dependencies": {
+        "fs-extra": "^0.17.0",
+        "async": "^1.0.0",
+        "ki1r0y.lock": "^1.0.4"
+    },
+    "devDependencies": {
+        "mocha": "^2.2.1"
+    }
+}
