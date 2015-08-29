@@ -2,7 +2,8 @@
 /*jslint node: true, vars: true */
 
 var path = require('path');
-var fs = require('fs-extra'); // extra, to create missing directories
+var fse = require('fs-extra'); // extra, to create missing directories
+var fs = fse; // Just to be explicit about what is normal fs behavior vs fse.
 var async = require('async');
 var lock = require('ki1r0y.lock').lock;
 
@@ -11,7 +12,7 @@ exports.doesNotExist = function doesNotExist(error) { return error && (error.cod
 // Should we consider using the operating system's synchronization or exclusivity utilities instead of our own locks?
 function writeLockFile(path, data, cb) { // Like fs.writeFile within a lock.
     lock(path, function (unlock) {
-        fs.writeFile(path, data, function (e, d) { unlock(); cb(e, d); });
+        fse.writeFile(path, data, function (e, d) { unlock(); cb(e, d); });
     });
 }
 function readLockFile(path, cb) { // Like fs.readFile within a lock.
@@ -64,12 +65,6 @@ exports.set = function set(path, obj, cb) {
     writeLockFile(path, JSON.stringify(obj), cb);
 };
 
-// Asynchronously calls transformer(oldData, writerFunction) on the contents of path,
-// where oldData is the parsed content fo documentPathname if the document exists, else defaultValue.
-// The transformer should in turn call writerFunction(error, neData, optionalResult), which will leave newData as the sole
-// content of the file unless newData is undefined or error is truthy, in which case no change is made.
-// Finally, callback(error, optionalResult) is called.
-// While this function does not block, callback won't happen until atomicChange is able to get exclusive access to path.
 exports.update = function update(documentPathname, defaultValue, transformer, callback) {
     lock(documentPathname, function (unlock) {
         fs.readFile(documentPathname, function (eRead, contentString) {
@@ -83,7 +78,7 @@ exports.update = function update(documentPathname, defaultValue, transformer, ca
                 } else if (newData === undefined) {
                     cb(null, optionalResult);
                 } else {
-                    fs.writeFile(documentPathname, JSON.stringify(newData), function (e) { cb(e, optionalResult); });
+                    fse.writeFile(documentPathname, JSON.stringify(newData), function (e) { cb(e, optionalResult); });
                 }
             };
             if (exports.doesNotExist(eRead)) {
@@ -99,28 +94,27 @@ exports.update = function update(documentPathname, defaultValue, transformer, ca
 
 
 // See modification time notes, above.
-exports.rename = fs.rename;
+exports.rename = fse.rename;
 
-exports.touch = function touch(documentPathname, callback) {
-    // The general behavior expected for "touch" is to not alter the contents of the documentPathname being touched.
-    //
-    // The current usage in ki1r0y is more forgiving: we only need the documentPathname to exist, and the content
-    // could be destroyed. (We currently do not copy files from oldspace to newspace when marking for garbage collection,
-    // but rather we simply note in newspace that the file has been marked.) Thus fs.truncate could be used.
-    //
-    // Alas, fs.truncate doesn't create new files on Amazon linux (which ki1r0y does need), and so we end up doing this,
-    // which concidentally does preserve any existing contents at documentPathname.
-    //
-    // FIXME: use fs-extra.ensureFile instead because it creates any missing directories.
-    fs.open(documentPathname, 'w', function (e, fd) { if (e) { callback(e); } else { fs.close(fd, callback); } });
-};
-exports.ensure = exports.touch;
+// The general behavior expected for "touch" is to not alter the contents of the documentPathname being touched.
+//
+// The current usage in ki1r0y is more forgiving: we only need the documentPathname to exist, and the content
+// could be destroyed. (We currently do not copy files from oldspace to newspace when marking for garbage collection,
+// but rather we simply note in newspace that the file has been marked.) Thus fs.truncate could be used.
+//
+// Alas, fs.truncate doesn't create new files on Amazon linux (which ki1r0y does need).
+//
+// We could use the following, which concidentally does preserve any existing contents at documentPathname:
+// fs.open(documentPathname, 'w', function (e, fd) { if (e) { callback(e); } else { fs.close(fd, callback); } })
+//
+// Alas, that doesn't missing directories as needed.
+//
+// Note that fs-extra.ensureFile does not update the modification time for an existing file, but we don't need that for ki1r0y.
+exports.ensure = fse.ensureFile;
 exports.exists = fs.exists;
-
 exports.destroy = fs.unlink;
-
-exports.ensureCollection = fs.ensureDir;
-exports.destroyCollection = fs.remove;
+exports.ensureCollection = fse.ensureDir;
+exports.destroyCollection = fse.remove; // TODO: Check that this is FAST. If not, rename the collection to a temp and then remove that!
 
 // FIXME: recurse through directories
 // FIXME eachLimit instead of eachSeries?

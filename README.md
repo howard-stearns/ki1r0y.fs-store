@@ -2,49 +2,64 @@
 
 A very simple file-based document store for (mostly) json.
 
-**Note: This version puts all the documents of a collection into the same directory. That puts a file-system-dependent limit on the number of documents in a collection.**
+Intended for large numbers (millions) of small documents. **HOWEVER: This version puts all the documents of a collection into the same directory. That puts a file-system-dependent limit on the number of documents in a collection.**  There is no memory cache and no (known) memory leaks.
 
-large numbers (millions) of small documents
-json (and binary buffers?)
-asynchronous access, including locking to ensure data integrity, but only within the application. I.e., read/write data integrity is not guaranteed between other processes using the same underlying files, or even separate processes using fs-store.
+Access is asynchronous, with standard node callbacks. Data read-write integrity is provided for overlapping aysnchronous requests, but only within the application. I.e., read/write data integrity is not guaranteed between other processes using the same underlying files, or even separate processes using fs-store.
 
 Results are undefined if an external program modifies json files with corrupt json.
 
-no memory cache - intended for applications in which the distribution of requests gives not advantage to doing so
-
-documentPathname has no restrictions. Missing directories will be created as needed.
-
-Functions that accept or answer data take care of serialization/deserialization (as JSON). Functions that do not access the data (rename, touch, destroy) will work on any data (e.g., binary files).
+A _collectionName_ is a string naming a directory in the file system. Missing directories will be created as needed. A _documentName_ is a _collectionName_ followed by path.sep and a _DocumentId_ that must be unique within the collection. Both have the same case sensitivity as the file system.
 
 ## Document Opertions
 
-### fs-store.getBuffer(documentPathname, callback)
-### fs-store.get(documentPathname, callback)
-### fs-store.getWithModificationTime(documentPathname, callback)
+```javascript
+getBuffer(documentName, callback)
+get(documentName, callback)
+getWithModificationTime(documentName, callback)
+```
+Invoke ```callback(error, contentString)```, ```callback(error, contentData)```, ```callback(error, object, DateTime)```, respectively.
 
-### fs-store.doesNotExist(error)
-True if error (as produced by get, getBuffer, or getWithModificationTime) indicates that the document does not exist.
+```doesNotExist(error)``` is ```true``` iff the specified document does not exist.
 
-### fs-store.setBuffer(documentPathname, documentBuffer, callback)
-### fs-store.set(documentPathname, document, callback)
+```javascript
+setBuffer(documentName, contentString, callback)
+set(documentName, contentData, callback)
+```
+Invoke ```callback(error)``` after storing _contentString_ or _contentData_ at the specified pathname, respectively.
 
-### fs-store.update(documentPathname, transformer, defaultValue, callback)
+```javascript
+update(documentName, defaultValue, transformer, callback)
+```
+Invokes ```transformer(oldData, writerFunction)``` on the contents of path, where _oldData_ is the parsed content fo documentPathname if the document exists, else _defaultValue_.
+The transformer should in turn call ```writerFunction(error, newData, optionalResult)```, which will leave _newData_ as the sole content of the file
+unless _newData_ is ```undefined``` or _error_ is truthy, in which case no change is made to the document. Finally, ```callback(error, optionalResult)``` is invoked.
 
-### fs-store.rename(sourcePathname, documentPathname, callback)
 
-### fs-store.touch(documentPathname, callback)
-_alias: ensure_
-Ensures that a document exists at documentPathname. Does not modify any existing document there, except that the modification time answered by getWithModificationTime is updated.
+```javascript
+rename(sourcePathname, documentName, callback)
+exists(documentName, callback)
+destroy(documentName, callback)
+```
+These have the same semantics as ```fs.rename```, ```fs.exists```, and ```fs.unlink```, except that they operate on _documentName_ (e.g., creating missing directories).
 
-
-### fs-store.exists(documentPathname, callback)
-### fs-store.destroy(documentPathname, callback)
+```javascript
+ensure(documentName, callback)
+```
+Ensures that a document exists at documentName. Does not modify any existing document there. However, it is not specified whether the modification time (as reported by ```getWithModificationTime``` of an existing document is updated.
 
 ## Collection Operations
 
-### fs-store.ensureCollection(collectionDirectory, callback);
-### fs-store.destroyCollection(collectionDirectory, callback);
+```javascript
+ensureCollection(collectionName, callback)
+destroyCollection(collectionName, callback)
+```
+Like ```ensure``` and ```destroy```, but for collections. In both cases, the _collection_ need not be empty.
 
-### fs-store.iterateIdentifiers(collectionDirectory, iterator, callback)
-### fs-store.iterateDocuments(collectionDirectory, iterator, callback)
-Exclusive access is guaranteed during the execution of each iterator. However, there are no guarantees on timeliness of coordination between iterator and mutations of the collection.
+```javascript
+iterateIdentifiers(collectionName, iterator, callback)
+iterateDocuments(collectionName, iterator, callback)
+```
+Invoke ```iterator(doc, documentId, cb)``` on each document in the collection, in an unspecified order that may be in parallel.
+The _doc_ is either the _documentName_ or the _contentData_, respectively.
+The _iterator_ must call ```cb(error)```, and it must do so asynchronously (e.g., using ```setImmediate```, ```nextTick``` or similar if necessary). 
+Per-document read/write consistency is guaranteed during the execution of each iterator. However, there are no guarantees on timeliness of coordination between iterator and additions/removals to the collection.
