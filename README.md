@@ -34,8 +34,10 @@ Invoke ```callback(error)``` after storing _contentString_ or _contentData_ at t
 update(documentName, defaultValue, transformer, callback)
 ```
 Invokes ```transformer(oldData, writerFunction)``` on the contents of path, where _oldData_ is the parsed content of _documentPathname_ if the document exists, else _defaultValue_.
-The transformer should in turn call ```writerFunction(error, newData, optionalResult)```, which will leave _newData_ as the sole content of the file
-unless _newData_ is ```undefined``` or _error_ is truthy, in which case no change is made to the document. Finally, ```callback(error, optionalResult)``` is invoked.
+The transformer must in turn call ```writerFunction(error, newData, optionalResult)```, which will leave _newData_ as the sole content of the file
+unless _newData_ is ```undefined``` or _error_ is truthy, in which case no change is made to the document.
+(The _writerFunction_ may be called synchronously. I.e., there is not need to delay it with ```setImmediate```, etc.)
+Finally, ```callback(error, optionalResult)``` is invoked.
 
 
 ```javascript

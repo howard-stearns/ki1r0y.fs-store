@@ -1,6 +1,6 @@
 {
     "name": "ki1r0y.fs-store",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "A very simple file-based document store for (mostly) json.",
     "keywords": ["fs", "store", "document store", "json"],
     "main": "index.js",

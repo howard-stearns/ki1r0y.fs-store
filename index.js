@@ -114,7 +114,7 @@ exports.ensure = fse.ensureFile;
 exports.exists = fs.exists;
 exports.destroy = fs.unlink;
 exports.ensureCollection = fse.ensureDir;
-exports.destroyCollection = fse.remove; // TODO: Check that this is FAST. If not, rename the collection to a temp and then remove that!
+exports.destroyCollection = fse.remove; // This isn't very fast. We could rename to a temp dir, do cb, and then remove temp in background...
 
 // FIXME: recurse through directories
 // FIXME eachLimit instead of eachSeries?
