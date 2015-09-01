@@ -1,5 +1,6 @@
 "use strict";
-/*jslint node: true, vars: true */
+/*jslint node: true, vars: true*/
+/*Copyright (c) 2013-2015 Howard Stearns. MIT License*/
 
 var path = require('path');
 var fse = require('fs-extra'); // extra, to create missing directories
