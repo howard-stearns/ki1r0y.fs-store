@@ -8,6 +8,8 @@ Access is asynchronous, with standard NodeJS callbacks. Data read-write integrit
 
 Results are undefined if an external program modifies json files with corrupt json.
 
+No protection is given for having too many open files. The application should limit parallel requests as needed.
+
 A _collectionName_ is a string naming a directory in the file system. Missing directories will be created as needed. A _documentName_ is a _collectionName_ followed by ```path.sep``` and a _documentId_ that must be unique within the collection. Both have the same case sensitivity and character requirements as the file system. (For portability, case-insenstive a _collectionName_ and _documentName_ is required.)
 
 ## Document Operations

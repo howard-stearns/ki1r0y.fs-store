@@ -11,7 +11,8 @@ function makeDocName(id) { return collectionName + path.sep + id; }
 var rawId = 'raw', rawDoc = makeDocName(rawId), rawPayload = 'some random non-json text', rawDoc2 = rawDoc + 2;
 var objId = 'obj', objDoc = makeDocName(objId), objPayload = {a: 'some text', b: 17}, objPayload2;
 var nParallel = 10 * 1000;
-var nFiles = 5 * 1000;
+var nFiles = 10 * 1000;
+var EMFILElimit = 4000;
 function contains(array, x) { return array.indexOf(x) >= 0; }
 
 describe('fs-store', function () {
@@ -194,11 +195,11 @@ describe('fs-store', function () {
     });
     it('handles lots of documents', function (done) {
         this.timeout(nFiles); // allowing 1 ms / test
-        async.times(nFiles, function (n, cb) {
+        async.timesLimit(nFiles, EMFILElimit, function (n, cb) {
             store.set(makeDocName('f' + n), n, cb);
         }, function (error) {
             assert.ifError(error);
-            async.times(nFiles, function (n, cb) {
+            async.timesLimit(nFiles, EMFILElimit, function (n, cb) {
                 store.get(makeDocName('f' + n), function (error, value) {
                     assert.equal(value, n);
                     cb(error);
