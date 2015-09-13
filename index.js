@@ -138,7 +138,7 @@ exports.iterateIdentifiers = function iterate(collectionDirectory, iterator, cal
 exports.iterateDocuments = function iterate(collectionDirectory, iterator, callback) {
     exports.iterateIdentifiers(collectionDirectory, function (documentPathname, id, cb) {
         fs.readFile(documentPathname, function (err, content) {
-            if (err) { return cb(err); }
+            if (err) { return cb((err.code !== 'ENOENT') && err); } // tolerate deletion during iteration
             iterator(JSON.parse(content), id, cb);
         });
     }, callback);

@@ -88,6 +88,18 @@ describe('fs-store', function () {
             done(e);
         });
     });
+    it('tolerates deleted doc during iteration', function (done) {
+        var fiveDocs = [makeDocName('d1'), makeDocName('d2'), makeDocName('d3'), makeDocName('d4')];
+        async.each(fiveDocs, function (d, dcb) { store.set(d, 42, dcb); }, function (e) {
+            assert.ifError(e);
+            store.iterateDocuments(collectionName, function (docData, documentId, icb) {
+                // Delete all fiveDocs we just added (which may have already been deleted during any iteration)
+                async.each(fiveDocs, function (d, dcb) {
+                    store.destroy(d, function () { dcb(); }); // ignore any error here, and continue destroying all
+                }, icb);
+            }, done); // If we have an error here (such as ENOENT), we've failed the test
+        });
+    });
     it('ensures new docs', function (done) {
         var name = makeDocName('something');
         store.ensure(name, function (e) {
@@ -125,7 +137,7 @@ describe('fs-store', function () {
             });
         });
     });
-    it.skip('passes update error without modification', function (done) {
+    it('passes update error without modification', function (done) {
         var specificError = 'some Error';
         store.update(objDoc, 'not used here either', function (data, cb) {
             assert.deepEqual(objPayload2, data);
@@ -138,7 +150,7 @@ describe('fs-store', function () {
             });
         });
     });
-    it.skip('skips update when given undefined', function (done) {
+    it('skips update when given undefined', function (done) {
         var optionalFinalValue = 'some value';
         store.update(objDoc, 'not used here either', function (data, cb) {
             assert.deepEqual(data, objPayload2);

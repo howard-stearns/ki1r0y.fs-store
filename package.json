@@ -22,7 +22,7 @@
     ],
     "dependencies": {
         "fs-extra": "^0.17.0",
-        "async": "^1.0.0",
+        "async": "^1.4.0",
         "ki1r0y.lock": "^1.0.4"
     },
     "devDependencies": {
