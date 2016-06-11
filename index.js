@@ -75,7 +75,7 @@ exports.update = function update(documentPathname, defaultValue, transformer, ca
             };
             var writerFunction = function (error, newData, optionalResult) {
                 if (error) {
-                    cb(error);
+                    cb(error, optionalResult);
                 } else if (newData === undefined) {
                     cb(null, optionalResult);
                 } else {

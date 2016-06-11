@@ -19,23 +19,18 @@ getBuffer(documentName, callback)
 get(documentName, callback)
 getWithModificationTime(documentName, callback)
 ```
-Invoke ```callback(error, contentString)```, ```callback(error, contentData)```, ```callback(error, contentData, DateTime)```, respectively.
+Invoke ```callback(error, contentBuffer)```, ```callback(error, contentData)```, ```callback(error, contentData, DateTime)```, respectively. Here _contentBuffer_ is as by ```fs.readFile```, and _contentData_ is the result of ```JSON.parse``` of the _contentBuffer_.
 
 ```javascript
-doesNotExist(error)
-```
-Answers ```true``` iff the specified document does not exist, where _error_ is as above.
-
-```javascript
-setBuffer(documentName, contentString, callback)
+setBuffer(documentName, contentBuffer, callback)
 set(documentName, contentData, callback)
 ```
-Invoke ```callback(error)``` after storing _contentString_ or _contentData_ at the specified pathname, respectively.
+Invoke ```callback(error)``` after storing _contentBuffer_ or _contentData_ at the specified _documentName_, respectively.
 
 ```javascript
 update(documentName, defaultValue, transformer, callback)
 ```
-Invokes ```transformer(oldData, writerFunction)``` on the contents of path, where _oldData_ is the parsed content of _documentPathname_ if the document exists, else _defaultValue_.
+Invokes ```transformer(oldData, writerFunction)``` on the contents of the document, where _oldData_ is the parsed content of _documentName_ if the document exists, else _defaultValue_.
 The transformer must in turn call ```writerFunction(error, newData, optionalResult)```, which will leave _newData_ as the sole content of the file
 unless _newData_ is ```undefined``` or _error_ is truthy, in which case no change is made to the document.
 (The _writerFunction_ may be called synchronously. I.e., there is not need to delay it with ```setImmediate```, etc.)
@@ -52,7 +47,7 @@ These have the same semantics as ```fs.rename```, ```fs.exists```, and ```fs.unl
 ```javascript
 ensure(documentName, callback)
 ```
-Ensures that a document exists at documentName. Does not modify any existing document there. However, it is not specified whether the modification time (as reported by ```getWithModificationTime```) of an existing document is updated. 
+Ensures that a document exists at _documentName_, without modifying any existing document there. However, it is not specified whether the modification time (as reported by ```getWithModificationTime```) of an existing document is updated. 
 
 ## Collection Operations
 
@@ -60,7 +55,7 @@ Ensures that a document exists at documentName. Does not modify any existing doc
 ensureCollection(collectionName, callback)
 destroyCollection(collectionName, callback)
 ```
-Like ```ensure``` and ```destroy```, but for collections. In both cases, the _collection_ need not be empty.
+Like ```ensure``` and ```destroy```, but for collections. In both cases, the collection need not be empty.
 
 ```javascript
 iterateIdentifiers(collectionName, iterator, callback)
@@ -70,3 +65,10 @@ Invoke ```iterator(doc, documentId, cb)``` on each document in the collection, i
 The _doc_ is either the _documentName_ or the _contentData_, respectively.
 The _iterator_ must call ```cb(error)```, and it must do so asynchronously (e.g., using ```setImmediate```, ```nextTick``` or similar if necessary). 
 Per-document read/write consistency is guaranteed during the execution of each iterator. However, there are no guarantees on timeliness of coordination between iterator and additions/removals to the collection.
+
+## Other Operations
+
+```javascript
+doesNotExist(error)
+```
+Answers ```true``` iff the specified document does not exist, where _error_ is as above.

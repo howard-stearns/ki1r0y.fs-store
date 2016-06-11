@@ -1,6 +1,6 @@
 {
     "name": "ki1r0y.fs-store",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "A very simple file-based document store for (mostly) json.",
     "keywords": ["fs", "store", "document store", "json"],
     "main": "index.js",
@@ -21,7 +21,7 @@
         "index.js", "test/test.js"
     ],
     "dependencies": {
-        "fs-extra": "^0.17.0",
+        "fs-extra": "^0.30.0",
         "async": "^1.4.0",
         "ki1r0y.lock": "^1.0.4"
     },
